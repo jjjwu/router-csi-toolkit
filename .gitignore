@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+captures/
+logs/
+analysis/
+csi_capture_*.bin
+csi_amplitude_heatmap.png
+csi_mean_amplitude_motion.png
+csi_analysis_summary.txt
