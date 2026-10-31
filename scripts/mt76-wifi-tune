@@ -1,0 +1,40 @@
+#!/bin/sh /etc/rc.common
+# OpenWrt init script: apply MT76 Wi-Fi throughput tuning at boot.
+#
+# MediaTek firmware "VoW ATF" (vow_atf) is enabled by default. With it
+# enabled, a station whose downlink rate has collapsed to MCS0 after an
+# idle period cannot recover even under sustained traffic on GL-MT6000
+# + OpenWrt mt76 (measured 2026-10-11). Disabling it restores recovery.
+#
+# Reference: https://csi.okwujun.pw/en/wifi-slow-troubleshooting/
+
+START=95
+STOP=10
+
+tune() {
+	# The debugfs nodes only exist once mt7915e has initialised.
+	i=0
+	while [ $i -lt 30 ]; do
+		found=0
+		for f in /sys/kernel/debug/ieee80211/phy*/mt76/vow_atf; do
+			[ -w "$f" ] || continue
+			found=1
+			cur=$(cat "$f" 2>/dev/null)
+			if [ "$cur" != "0" ]; then
+				echo 0 > "$f" 2>/dev/null && \
+					logger -t mt76-wifi-tune "vow_atf: $cur -> 0 ($f)"
+			fi
+		done
+		[ "$found" = "1" ] && break
+		i=$((i + 1))
+		sleep 2
+	done
+}
+
+start() {
+	tune
+}
+
+boot() {
+	tune
+}
