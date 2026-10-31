@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m compileall -q scripts tests
+      - run: python -m unittest discover -s tests -v
+      - name: POSIX shell syntax
+        run: |
+          for file in scripts/*.sh scripts/mt76-wifi-tune; do
+            sh -n "$file"
+          done
+      - name: Privacy guard
+        run: |
+          test ! -e scripts/after_flash_first_boot.sh
+          if grep -RInE '192\.168\.(8|9)\.|wearefamily|id_rsa|BEGIN [A-Z ]*PRIVATE KEY' . \
+            --exclude-dir=.git --exclude-dir=__pycache__ --exclude=ci.yml; then
+            echo "private environment data found" >&2
+            exit 1
+          fi
