@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this toolkit, cite the software and the related public dataset."
+title: "Router CSI Toolkit"
+abstract: "Capture, analysis, watchdog and OpenWrt/mt76 tuning scripts for reproducible Wi-Fi CSI experiments on a GL-MT6000 / MT7986 router."
+authors:
+  - family-names: "Wu"
+    given-names: "Jun"
+version: 0.1.2
+date-released: 2026-10-31
+license: MIT
+repository-code: "https://github.com/jjjwu/router-csi-toolkit"
+url: "https://csi.okwujun.pw/en/tools/"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23434789"
+    description: "Related public 10-minute CSI dataset"
