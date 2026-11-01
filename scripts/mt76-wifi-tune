@@ -6,7 +6,7 @@
 # idle period cannot recover even under sustained traffic on GL-MT6000
 # + OpenWrt mt76 (measured 2026-10-11). Disabling it restores recovery.
 #
-# Reference: https://csi.okwujun.pw/en/wifi-slow-troubleshooting/
+# Reference: https://okwujun.pw/en/wifi-slow-troubleshooting/
 
 START=95
 STOP=10
