@@ -9,7 +9,7 @@ version: 0.1.2
 date-released: 2026-10-31
 license: MIT
 repository-code: "https://github.com/jjjwu/router-csi-toolkit"
-url: "https://csi.okwujun.pw/en/tools/"
+url: "https://okwujun.pw/en/tools/"
 identifiers:
   - type: doi
     value: "10.5281/zenodo.23434789"
