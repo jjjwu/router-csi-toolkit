@@ -4,7 +4,7 @@
 #   HE80 / VHT80 : 80MHz - CSI experiment mode (256 subcarriers).
 #                  A 40MHz-only client (e.g. older Mac) collapses to
 #                  MCS0 on this BSS; see
-#                  https://csi.okwujun.pw/en/wifi-slow-troubleshooting/
+#                  https://okwujun.pw/en/wifi-slow-troubleshooting/
 #   HE40 / VHT40 : 40MHz - daily-use mode. The 40MHz client is stable
 #                  (~400 Mbps), CSI still streams but with half the
 #                  bandwidth (fewer subcarriers).
