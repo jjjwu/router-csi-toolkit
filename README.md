@@ -11,6 +11,9 @@ Canonical repository: <https://github.com/jjjwu/router-csi-toolkit>
 
 Public dataset: <https://doi.org/10.5281/zenodo.23434789>
 
+Current release: `v0.1.3` (2026-11-02). The archive is reproducible from the
+tagged source with `scripts/package_release.py`.
+
 ## What is included
 
 | 文件 | 运行位置 | 用途 |
@@ -57,6 +60,17 @@ ssh root@<router> 'chmod +x /usr/bin/csi-watchdog /etc/init.d/mt76-wifi-tune /us
 
 边界：时间空档只表示“没有写入闭合测量组”，不能单凭抓包文件断言是网络丢包。
 详细规则见 [`docs/CAPTURE-QUALITY.md`](docs/CAPTURE-QUALITY.md)。
+
+## Reproducible release archive
+
+```bash
+SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" \
+  python3 scripts/package_release.py --version 0.1.3 --output dist
+shasum -a 256 -c dist/router-csi-toolkit-v0.1.3.tar.gz.sha256
+```
+
+The packager normalizes file timestamps, ownership and permissions, and excludes
+Git metadata, Python caches, OS metadata and previous build output.
 
 ## Verified environment
 
