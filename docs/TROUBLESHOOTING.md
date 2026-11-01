@@ -1,7 +1,7 @@
 # 排障：跑起 CSI 之后 Wi-Fi 变慢
 
 > 本文是实测复现结论；完整定位过程见
-> <https://csi.okwujun.pw/zh/wifi-slow-troubleshooting/>。
+> <https://okwujun.pw/zh/wifi-slow-troubleshooting/>。
 
 ## 症状
 
