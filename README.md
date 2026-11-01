@@ -18,6 +18,7 @@ Public dataset: <https://doi.org/10.5281/zenodo.23434789>
 | `scripts/csi_capture_session.sh` | 分析机（macOS/Linux） | 一键定时抓包 + 自动分析 + 摘要 |
 | `scripts/csi_capture_linux.sh` | 分析机（Linux） | 纯标准库接收 + 落盘 |
 | `scripts/csi_capture.py` | 分析机 | UDP 原始流接收器，由两个 capture 脚本调用 |
+| `scripts/check_csi_capture.py` | 分析机 | 无第三方依赖的抓包质量预检：分帧、闭合组、链/子载波、时间空档、I/Q |
 | `scripts/analyze_csi_capture.py` | 分析机 | 幅度热图 + 1 秒滚动运动指标 |
 | `scripts/csi-watchdog.sh` | 路由器（cron 每分钟） | 守护 daemon / 接口 / CSI 状态，并重放性能调优 |
 | `scripts/wifi-htmode.sh` | 路由器 | HE80（CSI 高精度）↔ HE40（客户端稳定）切换 |
@@ -38,7 +39,11 @@ Public dataset: <https://doi.org/10.5281/zenodo.23434789>
 # 1) 分析机：接收 CSI（默认 UDP 8888）
 scripts/csi_capture_session.sh 60          # 抓 60 秒并自动出图
 
-# 2) 路由器：守护与调优（复制到路由器后执行一次）
+# 2) 进入 NumPy/Matplotlib 分析前，先验收容器与时间轴
+python3 scripts/check_csi_capture.py csi_udp_*.bin \
+  --format markdown --output capture-quality.md
+
+# 3) 路由器：守护与调优（复制到路由器后执行一次）
 scp scripts/csi-watchdog.sh      root@<router>:/usr/bin/csi-watchdog
 scp scripts/mt76-wifi-tune       root@<router>:/etc/init.d/mt76-wifi-tune
 scp scripts/wifi-htmode.sh       root@<router>:/usr/bin/wifi-htmode
@@ -46,6 +51,12 @@ ssh root@<router> 'chmod +x /usr/bin/csi-watchdog /etc/init.d/mt76-wifi-tune /us
                    /etc/init.d/mt76-wifi-tune enable;
                    echo "* * * * * /usr/bin/csi-watchdog >/dev/null 2>&1" >> /etc/crontabs/root'
 ```
+
+质量预检的退出码为 `0=通过`、`1=需要复核`、`2=失败`。没有抓包时也可直接在浏览器检查同一格式的文件：
+<https://okwujun.pw/zh/csi-capture-checker/>。抓包文件只在本地读取，报告不输出发送端 MAC。
+
+边界：时间空档只表示“没有写入闭合测量组”，不能单凭抓包文件断言是网络丢包。
+详细规则见 [`docs/CAPTURE-QUALITY.md`](docs/CAPTURE-QUALITY.md)。
 
 ## Verified environment
 

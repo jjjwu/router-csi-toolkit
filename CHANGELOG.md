@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add `scripts/check_csi_capture.py`, a standard-library capture quality preflight for framing, closed groups,
+  chain/subcarrier consistency, timestamp gaps and non-empty I/Q.
+- Add JSON and Markdown reports without emitting transmitter MAC addresses.
+- Link the equivalent browser-local checker at `https://okwujun.pw/{zh,en}/csi-capture-checker/`.
+
 ## 0.1.2 - 2026-10-31
 
 - Make `csi_capture.py` use the documented UDP port `8888` by default.
