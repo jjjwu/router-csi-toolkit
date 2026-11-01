@@ -48,9 +48,17 @@ scripts/csi_capture_session.sh 60
 # 或者只抓包（Linux；参数依次为秒数、UDP 端口、输出目录）
 scripts/csi_capture_linux.sh 60 8888 ./captures
 
+# 先用标准库预检；不需要 NumPy/Matplotlib
+python3 scripts/check_csi_capture.py captures/csi_udp_*.bin \
+  --format json --output captures/quality.json
+
 # 已有数据重新分析
 python3 scripts/analyze_csi_capture.py out.bin --outdir ./analysis
 ```
+
+`check_csi_capture.py` 返回 `0` 表示结构通过，`1` 表示有需要复核的警告，`2` 表示不应直接进入分析。
+它不会输出发送端 MAC。浏览器本地版本：
+<https://okwujun.pw/en/csi-capture-checker/>。
 
 ## 3. 常见问题
 
