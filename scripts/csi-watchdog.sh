@@ -12,7 +12,7 @@
 # It also re-applies the Wi-Fi throughput tuning: the MediaTek firmware
 # "VoW ATF" (airtime fairness) keeps a station's downlink rate pinned at
 # MCS0 after the client goes idle, so it is disabled. See:
-# https://csi.okwujun.pw/en/openwrt-wifi-slow-after-idle/
+# https://okwujun.pw/en/openwrt-wifi-slow-after-idle/
 
 DAEMON_NAME="mt76-csi-daemon"
 INIT_SCRIPT="/etc/init.d/mt76-csi"
