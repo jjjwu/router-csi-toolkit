@@ -5,7 +5,7 @@ Scripts and tooling extracted from a real GL-MT6000 (MT7986) Wi-Fi CSI lab:
 Those records group into 7,609 measurements, or about **12.64 independent snapshots/s**.
 
 > 本仓库是「路由器 Wi-Fi CSI」项目的脚本部分。配套教程与完整手册见站点
-> **https://csi.okwujun.pw**（中文 `/zh/`，English `/en/`）。
+> **[https://okwujun.pw](https://okwujun.pw)**（中文 `/zh/`，English `/en/`）。
 
 Canonical repository: <https://github.com/jjjwu/router-csi-toolkit>
 
