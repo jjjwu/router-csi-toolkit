@@ -4,6 +4,7 @@ __pycache__/
 captures/
 logs/
 analysis/
+dist/
 csi_capture_*.bin
 csi_amplitude_heatmap.png
 csi_mean_amplitude_motion.png

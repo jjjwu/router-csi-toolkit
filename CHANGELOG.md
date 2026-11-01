@@ -1,11 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.1.3 - 2026-11-02
 
 - Add `scripts/check_csi_capture.py`, a standard-library capture quality preflight for framing, closed groups,
   chain/subcarrier consistency, timestamp gaps and non-empty I/Q.
 - Add JSON and Markdown reports without emitting transmitter MAC addresses.
 - Link the equivalent browser-local checker at `https://okwujun.pw/{zh,en}/csi-capture-checker/`.
+- Add a deterministic release packager with reproducible file modes, timestamps, exclusions and SHA-256 output.
 
 ## 0.1.2 - 2026-10-31
 
