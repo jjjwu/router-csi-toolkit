@@ -14,6 +14,20 @@ Public dataset: <https://doi.org/10.5281/zenodo.23434789>
 Current release: `v0.1.3` (2026-11-02). The archive is reproducible from the
 tagged source with `scripts/package_release.py`.
 
+## Scope and evidence
+
+This toolkit validates capture framing, closed measurement groups, chain coverage, timing gaps and basic
+time-series preparation. It does **not** by itself establish presence, respiration, fall, radar or through-wall
+performance; those claims also require synchronized reference measurements and labelled event data.
+
+The project's evidence boundary matrix is maintained here:
+
+- English: <https://okwujun.pw/en/wifi-sensing-boundaries/>
+- 中文: <https://okwujun.pw/zh/wifi-sensing-boundaries/>
+
+For a first-party measurement, use the public 10-minute capture and the quality checks above rather than treating
+an unlabelled amplitude change as a sensor-level result.
+
 ## What is included
 
 | 文件 | 运行位置 | 用途 |
