@@ -16,8 +16,12 @@ import datetime
 import hashlib
 import json
 import math
+import os
+import stat
 import struct
 import sys
+import unicodedata
+import uuid
 from pathlib import Path
 
 
@@ -31,6 +35,177 @@ def rounded(value, digits=6):
     if value is None or not math.isfinite(float(value)):
         return None
     return round(float(value), digits)
+
+
+def normalised_path(path):
+    return Path(os.path.abspath(os.path.expanduser(os.fspath(path))))
+
+
+def path_key(path):
+    return tuple(
+        unicodedata.normalize("NFC", part).casefold()
+        for part in Path(path).parts
+    )
+
+
+def is_ancestor(parent, child):
+    parent_key = path_key(parent)
+    child_key = path_key(child)
+    return (
+        len(parent_key) < len(child_key)
+        and child_key[: len(parent_key)] == parent_key
+    )
+
+
+def validate_output_paths(capture, outputs):
+    capture_key = path_key(capture)
+    capture_stat = os.stat(capture)
+    capture_identity = (capture_stat.st_dev, capture_stat.st_ino)
+    seen = {}
+    existing = []
+    for option, path in outputs:
+        key = path_key(path)
+        if key == capture_key:
+            raise ValueError("output paths must be different")
+        if key in seen:
+            raise ValueError("output paths must be different")
+        if is_ancestor(path, capture) or is_ancestor(capture, path):
+            raise ValueError("output paths cannot contain the capture path")
+        try:
+            destination_stat = path.stat()
+        except FileNotFoundError:
+            destination_stat = None
+        if destination_stat is not None:
+            if stat.S_ISDIR(destination_stat.st_mode):
+                raise ValueError(f"{option} points to a directory")
+            destination_identity = (
+                destination_stat.st_dev,
+                destination_stat.st_ino,
+            )
+            if destination_identity == capture_identity:
+                raise ValueError("output paths must be different")
+            if destination_identity in existing:
+                raise ValueError("output paths must be different")
+            existing.append(destination_identity)
+        seen[key] = option
+
+    entries = list(seen.items())
+    for index, (left_key, left_option) in enumerate(entries):
+        for right_key, right_option in entries[index + 1 :]:
+            if (
+                left_key == right_key
+                or left_key[: len(right_key)] == right_key
+                or right_key[: len(left_key)] == left_key
+            ):
+                raise ValueError(
+                    f"{left_option} and {right_option} output paths conflict"
+                )
+
+
+def stage_text_file(path, text):
+    parent = path.parent
+    parent.mkdir(parents=True, exist_ok=True)
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    directory_fd = os.open(parent, flags)
+    temporary_name = f".{path.name}.{uuid.uuid4().hex}.tmp"
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    created = False
+    try:
+        file_descriptor = os.open(
+            temporary_name,
+            flags,
+            0o600,
+            dir_fd=directory_fd,
+        )
+        created = True
+        with os.fdopen(
+            file_descriptor,
+            "w",
+            encoding="utf-8",
+            newline="\n",
+        ) as output:
+            os.fchmod(output.fileno(), 0o644)
+            output.write(text)
+            output.flush()
+            os.fsync(output.fileno())
+    except BaseException:
+        if created:
+            try:
+                os.unlink(temporary_name, dir_fd=directory_fd)
+            except FileNotFoundError:
+                pass
+        os.close(directory_fd)
+        raise
+    return {
+        "path": path,
+        "directory_fd": directory_fd,
+        "temporary_name": temporary_name,
+    }
+
+
+def assert_destination_safe(path, directory_fd, capture_identity):
+    try:
+        destination = os.stat(
+            path.name,
+            dir_fd=directory_fd,
+            follow_symlinks=False,
+        )
+    except FileNotFoundError:
+        return
+    if stat.S_ISDIR(destination.st_mode):
+        raise OSError(f"output path is a directory: {path}")
+    if (
+        not stat.S_ISLNK(destination.st_mode)
+        and (destination.st_dev, destination.st_ino) == capture_identity
+    ):
+        raise OSError("output path is a hard link to the capture")
+
+
+def publish_text_outputs(outputs, capture):
+    capture_stat = os.stat(capture)
+    capture_identity = (capture_stat.st_dev, capture_stat.st_ino)
+    staged = []
+    try:
+        for path, text in outputs:
+            staged.append(stage_text_file(path, text))
+        directory_entries = {}
+        for item in staged:
+            directory_stat = os.fstat(item["directory_fd"])
+            entry_key = (
+                directory_stat.st_dev,
+                directory_stat.st_ino,
+                unicodedata.normalize("NFC", item["path"].name).casefold(),
+            )
+            if entry_key in directory_entries:
+                raise OSError(
+                    "two output paths resolve to the same directory entry"
+                )
+            directory_entries[entry_key] = item["path"]
+        for item in staged:
+            assert_destination_safe(
+                item["path"],
+                item["directory_fd"],
+                capture_identity,
+            )
+        for item in staged:
+            os.replace(
+                item["temporary_name"],
+                item["path"].name,
+                src_dir_fd=item["directory_fd"],
+                dst_dir_fd=item["directory_fd"],
+            )
+            item["temporary_name"] = None
+    finally:
+        for item in staged:
+            if item["temporary_name"] is not None:
+                try:
+                    os.unlink(
+                        item["temporary_name"],
+                        dir_fd=item["directory_fd"],
+                    )
+                except FileNotFoundError:
+                    pass
+            os.close(item["directory_fd"])
 
 
 def mode(counter):
@@ -489,31 +664,76 @@ def main(argv=None):
     )
     parser.add_argument("capture", type=Path)
     parser.add_argument(
-        "--format", choices=("json", "markdown"), default="markdown"
+        "--format", choices=("json", "markdown", "none"), default="markdown"
     )
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--json-output", type=Path)
+    parser.add_argument("--markdown-output", type=Path)
     parser.add_argument("--min-groups", type=int, default=10)
     parser.add_argument("--max-gap", type=float, default=5.0)
     parser.add_argument("--min-coverage", type=float, default=0.98)
     args = parser.parse_args(argv)
 
+    for attribute in ("output", "json_output", "markdown_output"):
+        path = getattr(args, attribute)
+        if path is not None:
+            setattr(args, attribute, normalised_path(path))
     if not args.capture.is_file():
         parser.error(f"capture not found: {args.capture}")
-    report = audit_capture(
-        args.capture,
-        min_groups=args.min_groups,
-        max_gap_seconds=args.max_gap,
-        min_coverage=args.min_coverage,
-    )
-    if args.format == "json":
-        output = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
-    else:
-        output = markdown_report(report)
+    if args.output and args.format == "none":
+        parser.error("--output requires --format json or markdown")
+    requested_outputs = [
+        ("--output", args.output),
+        ("--json-output", args.json_output),
+        ("--markdown-output", args.markdown_output),
+    ]
+    requested_outputs = [
+        (option, path)
+        for option, path in requested_outputs
+        if path is not None
+    ]
+    try:
+        validate_output_paths(args.capture, requested_outputs)
+    except ValueError as error:
+        parser.error(str(error))
+    except OSError as error:
+        sys.stderr.write(f"error: failed to validate output path: {error}\n")
+        return 2
+    try:
+        report = audit_capture(
+            args.capture,
+            min_groups=args.min_groups,
+            max_gap_seconds=args.max_gap,
+            min_coverage=args.min_coverage,
+        )
+    except OSError as error:
+        sys.stderr.write(f"error: failed to read capture: {error}\n")
+        return 2
+    json_output = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
+    markdown_output = markdown_report(report)
 
+    file_outputs = []
     if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(output, encoding="utf-8")
-    sys.stdout.write(output)
+        file_outputs.append(
+            (
+                args.output,
+                json_output if args.format == "json" else markdown_output,
+            )
+        )
+    if args.json_output:
+        file_outputs.append((args.json_output, json_output))
+    if args.markdown_output:
+        file_outputs.append((args.markdown_output, markdown_output))
+    if file_outputs:
+        try:
+            publish_text_outputs(file_outputs, args.capture)
+        except OSError as error:
+            sys.stderr.write(f"error: failed to write report: {error}\n")
+            return 2
+    if args.format == "json":
+        sys.stdout.write(json_output)
+    elif args.format == "markdown":
+        sys.stdout.write(markdown_output)
     return {"pass": 0, "warn": 1, "fail": 2}[
         report["result"]["quality"]["status"]
     ]
