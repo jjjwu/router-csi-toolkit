@@ -52,11 +52,21 @@ scripts/csi_capture_linux.sh 60 8888 ./captures
 python3 scripts/check_csi_capture.py captures/csi_udp_*.bin \
   --format json --output captures/quality.json
 
+# 或一次静默生成机器可读与人工复核两份报告
+python3 scripts/check_csi_capture.py captures/csi_udp_*.bin \
+  --format none \
+  --json-output captures/quality.json \
+  --markdown-output captures/quality.md
+
 # 已有数据重新分析
 python3 scripts/analyze_csi_capture.py out.bin --outdir ./analysis
 ```
 
 `check_csi_capture.py` 返回 `0` 表示结构通过，`1` 表示有需要复核的警告，`2` 表示不应直接进入分析。
+`--json-output` 与 `--markdown-output` 可以同时使用；输出路径重复或等于原始抓包时会拒绝执行。
+同一文件判定覆盖大小写别名、父子路径、符号链接和硬链接；报告采用临时文件加原子替换发布，
+输出 I/O 失败返回 `2`。
+每个报告文件原子发布，双文件组合不是跨文件事务。
 它不会输出发送端 MAC。浏览器本地版本：
 <https://okwujun.pw/en/csi-capture-checker/>。
 
