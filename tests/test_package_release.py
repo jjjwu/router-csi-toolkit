@@ -42,7 +42,7 @@ class PackageReleaseTests(unittest.TestCase):
             archive_path, checksum_path, digest = packager.build_release(
                 source,
                 root / "output",
-                version="0.1.3",
+                version="0.2.0",
                 epoch=1_793_563_200,
             )
 
@@ -80,13 +80,13 @@ class PackageReleaseTests(unittest.TestCase):
             first, _, first_digest = packager.build_release(
                 source,
                 root / "first",
-                version="0.1.3",
+                version="0.2.0",
                 epoch=1_793_563_200,
             )
             second, _, second_digest = packager.build_release(
                 source,
                 root / "second",
-                version="0.1.3",
+                version="0.2.0",
                 epoch=1_793_563_200,
             )
 
