@@ -5,8 +5,8 @@ abstract: "Capture, analysis, watchdog and OpenWrt/mt76 tuning scripts for repro
 authors:
   - family-names: "Wu"
     given-names: "Jun"
-version: 0.1.3
-date-released: 2026-11-02
+version: 0.2.0
+date-released: 2026-11-11
 license: MIT
 repository-code: "https://github.com/jjjwu/router-csi-toolkit"
 url: "https://okwujun.pw/en/tools/"

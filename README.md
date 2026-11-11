@@ -11,7 +11,7 @@ Canonical repository: <https://github.com/jjjwu/router-csi-toolkit>
 
 Public dataset: <https://doi.org/10.5281/zenodo.23434789>
 
-Current release: `v0.1.3` (2026-11-02). The archive is reproducible from the
+Current release: `v0.2.0` (2026-11-11). The archive is reproducible from the
 tagged source with `scripts/package_release.py`.
 
 ## Scope and evidence
@@ -56,9 +56,11 @@ an unlabelled amplitude change as a sensor-level result.
 # 1) 分析机：接收 CSI（默认 UDP 8888）
 scripts/csi_capture_session.sh 60          # 抓 60 秒并自动出图
 
-# 2) 进入 NumPy/Matplotlib 分析前，先验收容器与时间轴
+# 2) 进入 NumPy/Matplotlib 分析前，一次生成 JSON 与 Markdown 验收报告
 python3 scripts/check_csi_capture.py csi_udp_*.bin \
-  --format markdown --output capture-quality.md
+  --format none \
+  --json-output capture-quality.json \
+  --markdown-output capture-quality.md
 
 # 3) 路由器：守护与调优（复制到路由器后执行一次）
 scp scripts/csi-watchdog.sh      root@<router>:/usr/bin/csi-watchdog
@@ -69,7 +71,13 @@ ssh root@<router> 'chmod +x /usr/bin/csi-watchdog /etc/init.d/mt76-wifi-tune /us
                    echo "* * * * * /usr/bin/csi-watchdog >/dev/null 2>&1" >> /etc/crontabs/root'
 ```
 
-质量预检的退出码为 `0=通过`、`1=需要复核`、`2=失败`。没有抓包时也可直接在浏览器检查同一格式的文件：
+质量预检的退出码为 `0=通过`、`1=需要复核`、`2=失败`；`--format none` 只抑制终端输出，
+两个 `--*-output` 文件仍会写入。输出路径重复或指向原始抓包时会拒绝执行，避免覆盖证据。
+同一路径检查包含大小写别名、父子路径、符号链接和硬链接身份。报告先写入同目录临时文件，
+再通过固定目录句柄原子替换；输出 I/O 失败统一返回 `2`，不会伪装成质量警告。
+每个文件是原子发布，但 JSON+Markdown 两份文件不是跨文件事务；极端发布失败时可能已有
+一份完整报告落盘，脚本会明确返回 `2`。
+没有抓包时也可直接在浏览器检查同一格式的文件：
 <https://okwujun.pw/zh/csi-capture-checker/>。抓包文件只在本地读取，报告不输出发送端 MAC。
 
 边界：时间空档只表示“没有写入闭合测量组”，不能单凭抓包文件断言是网络丢包。
@@ -79,8 +87,8 @@ ssh root@<router> 'chmod +x /usr/bin/csi-watchdog /etc/init.d/mt76-wifi-tune /us
 
 ```bash
 SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)" \
-  python3 scripts/package_release.py --version 0.1.3 --output dist
-shasum -a 256 -c dist/router-csi-toolkit-v0.1.3.tar.gz.sha256
+  python3 scripts/package_release.py --version 0.2.0 --output dist
+shasum -a 256 -c dist/router-csi-toolkit-v0.2.0.tar.gz.sha256
 ```
 
 The packager normalizes file timestamps, ownership and permissions, and excludes

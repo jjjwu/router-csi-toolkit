@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0 - 2026-11-11
+
+- Let `check_csi_capture.py` write JSON and Markdown reports in one run with
+  `--json-output` and `--markdown-output`.
+- Add `--format none` for quiet batch use while preserving the existing
+  `--format/--output` interface.
+- Reject duplicate output paths or any report path that would overwrite the source capture.
+- Stage reports in fixed directory handles and publish with atomic replacement, so output
+  symlinks cannot redirect writes into the capture.
+- Reject case-fold aliases, parent/child output paths and output I/O failures with exit `2`.
+- Detect different symlinked parent paths that resolve to the same output directory entry.
+- Derive the reproducible release epoch from the current CI checkout.
+
 ## 0.1.3 - 2026-11-02
 
 - Add `scripts/check_csi_capture.py`, a standard-library capture quality preflight for framing, closed groups,

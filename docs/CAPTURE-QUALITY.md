@@ -15,7 +15,22 @@ python3 scripts/check_csi_capture.py capture.bin \
 python3 scripts/check_csi_capture.py capture.bin \
   --format json \
   --output capture-quality.json
+
+# JSON 与 Markdown 一次生成；stdout 静默，适合批处理
+python3 scripts/check_csi_capture.py capture.bin \
+  --format none \
+  --json-output capture-quality.json \
+  --markdown-output capture-quality.md
 ```
+
+`--json-output` 和 `--markdown-output` 可单独或同时使用。所有已请求的输出路径必须互不相同，
+也不能与原始抓包指向同一文件；否则脚本在写入前退出 `2`。身份检查包含符号链接和硬链接，
+同时保守拒绝大小写别名和父子路径。报告先写入目标目录内的临时文件，再通过已打开的目录句柄
+执行原子替换；因此审计期间新建的输出符号链接也只会被替换，不能把写入重定向到抓包。
+所有临时文件创建后，还会用实际父目录的 `(st_dev, st_ino)` 与规范化 basename 再次检查，
+阻止两个符号链接父目录指向同一目录项。每个文件单独原子发布；JSON 与 Markdown 之间不是
+跨文件事务，极端发布失败可能留下其中一份完整报告，但进程会返回 `2`。
+目录创建、权限、磁盘或其他输出 I/O 失败统一返回 `2`，不会被误判为质量警告。
 
 退出码：
 
@@ -70,6 +85,20 @@ python3 scripts/check_csi_capture.py capture.bin \
 | 判定 | pass |
 
 样本下载与 SHA-256：<https://okwujun.pw/zh/datasets/>。
+
+对公开 10 分钟脱敏数据，同一检查器返回 `warn/1`：
+
+| 字段 | 值 |
+| :--- | ---: |
+| 外层记录 | 57,293 |
+| 闭合测量组 | 7,609 |
+| 8 链组 / 4 链组 | 6,714 / 895 |
+| 链覆盖 | 约 0.882 |
+| 记录率 / 测量率 | 95.500 / 12.683 Hz |
+| 最大闭合组间隔 | 2.372654 s |
+| 判定 | warn |
+
+该警告来自 4 链与 8 链测量组混合，低于默认 98% 链覆盖阈值；文件仍可解析并进入下一层分析。
 
 ## 隐私
 
