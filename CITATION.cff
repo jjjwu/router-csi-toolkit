@@ -14,3 +14,6 @@ identifiers:
   - type: doi
     value: "10.5281/zenodo.23434789"
     description: "Related public 10-minute CSI dataset"
+  - type: url
+    value: "https://datasetcatalog.nlm.nih.gov/dataset?q=0003380979"
+    description: "NLM Dataset Catalog record for the related dataset; catalogue inclusion is not NLM/NIH endorsement, peer review or certification"

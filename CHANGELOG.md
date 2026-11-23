@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Link the public dataset page and its NLM Dataset Catalog record from the README and Citation File Format metadata.
+- State explicitly that catalogue inclusion is not NLM/NIH endorsement, peer review or quality certification.
+
 ## 0.2.0 - 2026-11-11
 
 - Let `check_csi_capture.py` write JSON and Markdown reports in one run with
