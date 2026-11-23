@@ -11,6 +11,12 @@ Canonical repository: <https://github.com/jjjwu/router-csi-toolkit>
 
 Public dataset: <https://doi.org/10.5281/zenodo.23434789>
 
+Dataset page and data dictionary: <https://okwujun.pw/en/datasets/>
+
+NLM Dataset Catalog record:
+<https://datasetcatalog.nlm.nih.gov/dataset?q=0003380979>. Catalogue inclusion is a
+discovery and citation lead, not NLM/NIH endorsement, peer review or quality certification.
+
 Current release: `v0.2.0` (2026-11-11). The archive is reproducible from the
 tagged source with `scripts/package_release.py`.
 
